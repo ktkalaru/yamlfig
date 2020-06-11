@@ -53,7 +53,7 @@ brought to command-line argument parsing.
 
 The Python package is hosted on PyPI:
 
-  * https://pypi.com/project/yamlfig
+  * https://pypi.org/project/yamlfig
 
 The source code, documentation, and issue tracker is hosted on GitHub:
 
