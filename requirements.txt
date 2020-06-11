@@ -1,0 +1,2 @@
+# Requirements for yamlfig
+PyYAML>=5.3.1

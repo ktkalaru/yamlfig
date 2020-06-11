@@ -1,0 +1,10 @@
+LOCAL.txt
+*.egg-info
+*.pyc
+*~
+tmp-*
+.tox
+.coverage
+tests/venv
+build
+dist
