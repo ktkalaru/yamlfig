@@ -1034,6 +1034,28 @@ class ParsedYamlTypes(TestCase):
             confp.parse_file(self.conffile)
 
 
+class ConfigRecordChecks(TestCase):
+    """Test support for config records rather than files."""
+
+    def test_config_record_map_good(self):
+        """A config record with a map-like structure should be supported."""
+        confp = YamlConfigParser()
+        confp.add_rule('aaa')
+        confp.add_rule('bbb')
+        confrec = {'aaa': 'aaaaa', 'bbb': 'bbbbb'}
+        conf = confp.parse_record(confrec, filename='*in-memory*')
+        self.assertEqual(conf.aaa, 'aaaaa')
+        self.assertEqual(conf.bbb, 'bbbbb')
+
+    def test_config_record_map_bad(self):
+        """A config record must specify a filename or identifying string."""
+        confp = YamlConfigParser()
+        confp.add_rule('field')
+        confrec = {'field': 'aaaaa'}
+        with self.assertRaisesRegex(ParseError, 'filename is missing'):
+            _ = confp.parse_record(confrec, filename=None)
+
+
 class ConfigFileChecks(TestCase):
     """Test correctly and incorrectly formatted and used config files."""
 

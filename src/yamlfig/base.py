@@ -697,11 +697,15 @@ class YamlConfigRule(object):
         # Update the state to signal rules attached
         conf._state = 'RULED'
 
-    def parse_record(self, record, filename=None,
+    def parse_record(self, record, filename,
                      check_types=True,
                      check_tests=True,
                      do_transforms=True):
         """Verify typing and testing rules and return converted record.
+
+        A filename must be given.  If the record does not correspond
+        to a file but started as an in-memory object, the convention
+        is to use filename='*in-memory*' to denote the source.
 
         The record will be converted to a YamlConfig object if it is a
         dict and a YamlConfigList object if it is a list.  The rules
@@ -717,6 +721,8 @@ class YamlConfigRule(object):
 
         """
         # pylint: disable=too-many-arguments
+        if filename is None:
+            raise ParseError('filename is missing (use *in-memory* if none)')
         if isinstance(record, (list, tuple, set)):
             conf = YamlConfigList(
                 record, root=None, filename=filename, rule=self)
