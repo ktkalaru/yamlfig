@@ -21,12 +21,12 @@ from datetime import date, datetime
 import yaml
 import unittest2
 
+# Shared testing basics - pytest enables the relative load
+from testbase import CaptureIO, TestCase, _as_naive_datetime_in_utc
+
 # Target package for testing
 from yamlfig import YamlConfigParser, YamlConfigRule, YamlConfig, \
     YamlConfigList, ParseError, test, print_underscore_warning
-
-# Shared testing basics - pytest enables the relative load
-from testbase import CaptureIO, TestCase, _as_naive_datetime_in_utc
 
 
 class ParserChecks(TestCase):
@@ -363,12 +363,12 @@ class ParsedYamlTypes(TestCase):
         """Test recognition of various forms of null value."""
         confp = YamlConfigParser()
 
-        NoneType = type(None)
-        confp.add_rule('yaml_empty', path_type=NoneType)
-        confp.add_rule('yaml_canonical', path_type=NoneType)
-        confp.add_rule('yaml_null', path_type=NoneType)
+        none_type = type(None)
+        confp.add_rule('yaml_empty', path_type=none_type)
+        confp.add_rule('yaml_canonical', path_type=none_type)
+        confp.add_rule('yaml_null', path_type=none_type)
         confp.add_rule('yaml_list', path_type=list)
-        confp.add_rule('yaml_list.*', path_type=NoneType)
+        confp.add_rule('yaml_list.*', path_type=none_type)
         confp.add_rule('yaml_map', path_type=dict)
         confp.add_rule('yaml_map.*')
 
@@ -544,7 +544,7 @@ class ParsedYamlTypes(TestCase):
         In Python 3, values with ascii or unicode characters should
         be recognized with path_type=str
         """
-        # pylint: disable=undefined-variable # unicode/long for Python 2 support
+        # pylint: disable=undefined-variable
 
         confp = YamlConfigParser()
 
@@ -633,7 +633,7 @@ class ParsedYamlTypes(TestCase):
         separate type in Python 2.
 
         """
-        # pylint: disable=undefined-variable # unicode/long for Python 2 support
+        # pylint: disable=undefined-variable
 
         # Sanity check that non-string keys are handled, and that
         # usual hashing is used via collisions
@@ -2885,7 +2885,7 @@ class PathNestingLimits(TestCase):
         else:
             assert isinstance(ptype, tuple)
             conf_record = {} if ptype[0] == str else []
-            dtype = tuple([dict if typ == str else list for typ in ptype])
+            dtype = tuple((dict if typ == str else list for typ in ptype))
 
         # Generate all combos and use the index of the combo as the path value
         for value, combo in enumerate(self._generate_path_combos(
@@ -4497,121 +4497,121 @@ class RulePathWildcardsAndDefaults(TestCase):
 class PathTypeTestNullValues(TestCase):
     """Test that path_type recognizes nulls as NoneTypes."""
 
-    NoneType = type(None)
+    none_type = type(None)
 
     def test_path_type_null_good_1(self):
-        """NoneType should recognize various kinds of null value."""
+        """A none_type should recognize various kinds of null value."""
         conf = self._rule_path_type_good(
-            self.NoneType, '', 'None', normalizer=str)
+            self.none_type, '', 'None', normalizer=str)
         self.assertIsNone(conf.field)
 
     def test_path_type_null_good_2(self):
-        """NoneType should recognize various kinds of null value."""
+        """A none_type should recognize various kinds of null value."""
         conf = self._rule_path_type_good(
-            self.NoneType, '~', 'None', normalizer=str)
+            self.none_type, '~', 'None', normalizer=str)
         self.assertIsNone(conf.field)
 
     def test_path_type_null_good_3(self):
-        """NoneType should recognize various kinds of null value."""
+        """A none_type should recognize various kinds of null value."""
         conf = self._rule_path_type_good(
-            self.NoneType, 'null', 'None', normalizer=str)
+            self.none_type, 'null', 'None', normalizer=str)
         self.assertIsNone(conf.field)
 
     def test_path_type_null_good_4(self):
-        """NoneType should recognize various kinds of null value."""
+        """A none_type should recognize various kinds of null value."""
         conf = self._rule_path_type_good(
-            self.NoneType, 'NULL', 'None', normalizer=str)
+            self.none_type, 'NULL', 'None', normalizer=str)
         self.assertIsNone(conf.field)
 
     def test_path_type_null_good_5(self):
-        """NoneType should recognize complex mapping key."""
+        """A none_type should recognize complex mapping key."""
         confp = YamlConfigParser()
-        confp.add_rule('field', path_type=self.NoneType)
+        confp.add_rule('field', path_type=self.none_type)
         conf = self._test_conf_good(confp, '? field')
         self.assertIsNone(conf.field)
 
     def test_path_type_null_bad_1(self):
-        """NoneType should reject things that only look like nulls."""
+        """A none_type should reject things that only look like nulls."""
         self._rule_path_type_bad(
-            self.NoneType, 'None', 'has type str not type NoneType')
+            self.none_type, 'None', 'has type str not type NoneType')
 
     def test_path_type_null_bad_2(self):
-        """NoneType should reject things that only look like nulls."""
+        """A none_type should reject things that only look like nulls."""
         self._rule_path_type_bad(
-            self.NoneType, '"null"', 'has type str not type NoneType')
+            self.none_type, '"null"', 'has type str not type NoneType')
 
     def test_path_type_null_bad_3(self):
-        """NoneType should reject things that only look like nulls."""
+        """A none_type should reject things that only look like nulls."""
         self._rule_path_type_bad(
-            self.NoneType, 'nUll', 'has type str not type NoneType')
+            self.none_type, 'nUll', 'has type str not type NoneType')
 
     def test_path_type_null_bad_4(self):
-        """NoneType should reject things that only look like nulls."""
+        """A none_type should reject things that only look like nulls."""
         self._rule_path_type_bad(
-            self.NoneType, "'~'", 'has type str not type NoneType')
+            self.none_type, "'~'", 'has type str not type NoneType')
 
 
 class PathTypeTestBooleans(TestCase):
     """Test that path_type recognizes booleans."""
 
     def test_path_type_bool_good_1(self):
-        """bool should recognize booleans."""
+        """A bool should recognize booleans."""
         self._rule_path_type_good(bool, 'true', True)
 
     def test_path_type_bool_good_2(self):
-        """bool should recognize booleans."""
+        """A bool should recognize booleans."""
         self._rule_path_type_good(bool, 'True', True)
 
     def test_path_type_bool_good_3(self):
-        """bool should recognize booleans."""
+        """A bool should recognize booleans."""
         self._rule_path_type_good(bool, 'yes', True)
 
     def test_path_type_bool_good_4(self):
-        """bool should recognize booleans."""
+        """A bool should recognize booleans."""
         self._rule_path_type_good(bool, 'ON', True)
 
     def test_path_type_bool_good_5(self):
-        """bool should recognize booleans."""
+        """A bool should recognize booleans."""
         self._rule_path_type_good(bool, 'false', False)
 
     def test_path_type_bool_good_6(self):
-        """bool should recognize booleans."""
+        """A bool should recognize booleans."""
         self._rule_path_type_good(bool, 'False', False)
 
     def test_path_type_bool_good_7(self):
-        """bool should recognize booleans."""
+        """A bool should recognize booleans."""
         self._rule_path_type_good(bool, 'NO', False)
 
     def test_path_type_bool_good_8(self):
-        """bool should recognize booleans."""
+        """A bool should recognize booleans."""
         self._rule_path_type_good(bool, 'off', False)
 
     def test_path_type_bool_bad_1(self):
-        """bool should reject things that only look like booleans."""
+        """A bool should reject things that only look like booleans."""
         self._rule_path_type_bad(bool, '"True"', 'has type str not type bool')
 
     def test_path_type_bool_bad_2(self):
-        """bool should reject things that only look like booleans."""
+        """A bool should reject things that only look like booleans."""
         self._rule_path_type_bad(bool, 'tRUE', 'has type str not type bool')
 
     def test_path_type_bool_bad_3(self):
-        """bool should reject things that only  look like booleans."""
+        """A bool should reject things that only  look like booleans."""
         self._rule_path_type_bad(bool, 'nO', 'has type str not type bool')
 
     def test_path_type_bool_bad_4(self):
-        """bool should reject things that only  look like booleans."""
+        """A bool should reject things that only  look like booleans."""
         self._rule_path_type_bad(bool, '""', 'has type str not type bool')
 
     def test_path_type_bool_bad_5(self):
-        """bool should reject things that only  look like booleans."""
+        """A bool should reject things that only  look like booleans."""
         self._rule_path_type_bad(bool, '', 'has type NoneType not type bool')
 
     def test_path_type_bool_bad_6(self):
-        """bool should reject things that only  look like booleans."""
+        """A bool should reject things that only  look like booleans."""
         self._rule_path_type_bad(bool, '1', 'has type int not type bool')
 
     def test_path_type_bool_bad_7(self):
-        """bool should reject things that only  look like booleans."""
+        """A bool should reject things that only  look like booleans."""
         self._rule_path_type_bad(bool, '0', 'has type int not type bool')
 
 
@@ -4619,78 +4619,78 @@ class PathTypeTestStrings(TestCase):
     """Test that path_type recognizes string and unicode types."""
 
     def test_path_type_str_good_1(self):
-        """str should recognize valid strings."""
+        """A str should recognize valid strings."""
         self._rule_path_type_good(str, 'ascii', 'ascii')
 
     def test_path_type_str_good_2(self):
-        """str should recognize valid strings."""
+        """A str should recognize valid strings."""
         self._rule_path_type_good(str, '""', '')
 
     def test_path_type_str_good_3(self):
-        """str should recognize valid strings."""
+        """A str should recognize valid strings."""
         self._rule_path_type_good(str, "''", '')
 
     def test_path_type_str_good_4(self):
-        """str should recognize valid strings."""
+        """A str should recognize valid strings."""
         self._rule_path_type_good(str, '"1.e+2"', '1.e+2')
 
     @unittest2.skipIf(sys.version_info.major == 2, 'specific to Python 3')
     def test_path_type_str_good_1_py3(self):
-        """str should recognize valid strings."""
+        """A str should recognize valid strings."""
         self._rule_path_type_good(str, u'unicØde', 'unicØde')
 
     @unittest2.skipIf(sys.version_info.major > 2, 'specific to Python 2')
     def test_path_type_str_bad_1_py2(self):
-        """str should reject unicode strings."""
+        """A str should reject unicode strings."""
         self._rule_path_type_bad(
             str, u'unicØde', 'has type unicode not type str')
 
     def test_path_type_str_bad_1(self):
-        """str should reject integers."""
+        """A str should reject integers."""
         self._rule_path_type_bad(str, '42', 'has type int not type str')
 
     def test_path_type_str_bad_2(self):
-        """str should reject floats."""
+        """A str should reject floats."""
         self._rule_path_type_bad(str, '1.e+2', 'has type float not type str')
 
     def test_path_type_str_bad_3(self):
-        """str should reject null values."""
+        """A str should reject null values."""
         self._rule_path_type_bad(str, '', 'has type NoneType not type str')
 
     @unittest2.skipIf(sys.version_info.major > 2, 'specific to Python 2')
     def test_path_type_unicode_good_1_py2(self):
-        """unicode should recognize valid unicode strings."""
-        # pylint: disable=undefined-variable # unicode/long for Python 2 support
+        """A unicode should recognize valid unicode strings."""
+        # pylint: disable=undefined-variable
         self._rule_path_type_good(unicode, u'unicØde', u'unicØde')
 
     @unittest2.skipIf(sys.version_info.major > 2, 'specific to Python 2')
     def test_path_type_unicode_bad_1_py2(self):
-        """unicode should reject str strings."""
-        # pylint: disable=undefined-variable # unicode/long for Python 2 support
+        """A unicode should reject str strings."""
+        # pylint: disable=undefined-variable
         self._rule_path_type_bad(
             unicode, 'ascii', 'has type str not type unicode')
 
     @unittest2.skipIf(sys.version_info.major > 2, 'specific to Python 2')
     def test_path_type_string_union_good_1_py2(self):
-        """str, unicode should recognize both types of strings."""
-        # pylint: disable=undefined-variable # unicode/long for Python 2 support
+        """A str, unicode should recognize both types of strings."""
+        # pylint: disable=undefined-variable
         self._rule_path_type_good((str, unicode), 'ascii', 'ascii')
 
     @unittest2.skipIf(sys.version_info.major > 2, 'specific to Python 2')
     def test_path_type_string_union_good_2_py2(self):
-        """str, unicode should recognize both types of strings."""
-        # pylint: disable=undefined-variable # unicode/long for Python 2 support
+        """A str, unicode should recognize both types of strings."""
+        # pylint: disable=undefined-variable
         self._rule_path_type_good((str, unicode), u'unicØde', u'unicØde')
 
     @unittest2.skipIf(sys.version_info.major > 2, 'specific to Python 2')
     def test_path_type_string_union_bad_py2(self):
         """Test that str, unicode rejects non-string."""
-        # pylint: disable=undefined-variable # unicode/long for Python 2 support
+        # pylint: disable=undefined-variable
         self._rule_path_type_bad(
             (str, unicode), 42, 'has type int not type str or unicode')
 
     def test_path_type_str_bad_list_not_str(self):
-        """str should recognize when value is a list structure instead."""
+        """A str should recognize when value is a list structure instead."""
         # Write the file ourselves and configure the parser with
         # nofollow on the rule otherwise we would get an unexpected
         # field error before the typecheck happened.
@@ -4706,7 +4706,7 @@ class PathTypeTestStrings(TestCase):
             confp.parse_file(self.conffile)
 
     def test_path_type_str_bad_map_not_str(self):
-        """str should recognize when value is a map structure instead."""
+        """A str should recognize when value is a map structure instead."""
         # Write the file ourselves and configure the parser with
         # nofollow on the rule otherwise we would get an unexpected
         # field error before the typecheck happened.
@@ -4725,270 +4725,267 @@ class PathTypeTestNumbers(TestCase):
     """Test that path_type recognizes ints and floats."""
 
     def test_path_type_int_good_1(self):
-        """int should recognize valid integers."""
+        """An int should recognize valid integers."""
         self._rule_path_type_good(int, '42', 42)
 
     def test_path_type_int_good_2(self):
-        """int should recognize valid integers."""
+        """An int should recognize valid integers."""
         self._rule_path_type_good(int, '0', 0)
 
     def test_path_type_int_good_3(self):
-        """int should recognize valid integers."""
+        """An int should recognize valid integers."""
         self._rule_path_type_good(int, '-42', -42)
 
     def test_path_type_int_good_4(self):
-        """int should recognize valid integers."""
+        """An int should recognize valid integers."""
         self._rule_path_type_good(int, '-0', 0)
 
     def test_path_type_int_good_5(self):
-        """int should recognize valid integers."""
+        """An int should recognize valid integers."""
         self._rule_path_type_good(int, '+0', 0)
 
     @unittest2.skipIf(sys.version_info.major > 2, 'specific to Python 2')
     def test_path_type_int_good_6_py2(self):
-        """int should recognize valid integers."""
-        # pylint: disable=no-member  # Python 2 support
+        """An int should recognize valid integers."""
+        # pylint: disable=no-member
         self._rule_path_type_good(int, str(sys.maxint), sys.maxint)
 
     @unittest2.skipIf(sys.version_info.major == 2, 'specific to Python 3')
     def test_path_type_int_good_6_py3(self):
-        """int should recognize valid integers."""
+        """An int should recognize valid integers."""
         self._rule_path_type_good(int, str(sys.maxsize), sys.maxsize)
 
     @unittest2.skipIf(sys.version_info.major == 2, 'specific to Python 3')
     def test_path_type_int_good_7_py3(self):
-        """int should recognize valid integers."""
+        """An int should recognize valid integers."""
         self._rule_path_type_good(int, str(sys.maxsize+1), sys.maxsize+1)
 
     def test_path_type_int_good_one_is_true(self):
-        """int 1 is not a bool but should be recognized as true."""
+        """An int 1 is not a bool but should be recognized as true."""
         conf = self._rule_path_type_good(int, '1', 1)
         self.assertFalse(isinstance(conf.field, bool))
         self.assertTrue(conf.field)
 
     def test_path_type_int_good_zero_is_false(self):
-        """int 0 is not a bool but should be recognized as false."""
+        """An int 0 is not a bool but should be recognized as false."""
         conf = self._rule_path_type_good(int, '0', 0)
         self.assertFalse(isinstance(conf.field, bool))
         self.assertFalse(conf.field)
 
     def test_path_type_int_bad_1(self):
-        """int should reject floats."""
+        """An int should reject floats."""
         self._rule_path_type_bad(
             int, '0.0', 'has type float not type int')
 
     def test_path_type_int_bad_2(self):
-        """int should reject strings that look like ints."""
+        """An int should reject strings that look like ints."""
         self._rule_path_type_bad(
             int, '"0"', 'has type str not type int')
 
     @unittest2.skipIf(sys.version_info.major > 2, 'specific to Python 2')
     def test_path_type_int_bad_3_py2(self):
-        """int should reject longs that exceed maxint."""
-        # pylint: disable=no-member  # Python 2 support
+        """An int should reject longs that exceed maxint."""
+        # pylint: disable=no-member
         self._rule_path_type_bad(
             int, str(sys.maxint+1), 'has type long not type int')
 
     def test_path_type_float_good_1(self):
-        """float should recognize valid floats."""
+        """A float should recognize valid floats."""
         self._rule_path_type_good(float, '42.2', 42.2)
 
     def test_path_type_float_good_2(self):
-        """float should recognize valid floats."""
+        """A float should recognize valid floats."""
         self._rule_path_type_good(float, '1.e+5', 100000)
 
     def test_path_type_float_good_3(self):
-        """float should recognize infinity."""
+        """A float should recognize infinity."""
         self._rule_path_type_good(float, '.inf', float('inf'))
 
     def test_path_type_float_good_4(self):
-        """float should recognize negative infinity."""
+        """A float should recognize negative infinity."""
         self._rule_path_type_good(float, '-.inf', -float('inf'))
 
     def test_path_type_float_good_5(self):
-        """float should recognize NaNs."""
+        """A float should recognize NaNs."""
         self._rule_path_type_good(float, '.nan', 'nan', normalizer=str)
 
     def test_path_type_float_bad_1(self):
-        """float should reject ints."""
+        """A float should reject ints."""
         self._rule_path_type_bad(float, '0', 'has type int not type float')
 
     def test_path_type_float_bad_2(self):
-        """float should reject strings."""
+        """A float should reject strings."""
         self._rule_path_type_bad(float, '1e3', 'has type str not type float')
 
     @unittest2.skipIf(sys.version_info.major > 2, 'specific to Python 2')
     def test_path_type_float_bad_3_py2(self):
-        """float should reject ints."""
-        # pylint: disable=no-member  # Python 2 support
+        """A float should reject ints."""
+        # pylint: disable=no-member
         self._rule_path_type_bad(
             float, str(sys.maxint+1), 'has type long not type float')
 
     @unittest2.skipIf(sys.version_info.major == 2, 'specific to Python 3')
     def test_path_type_float_bad_3_py3(self):
-        """float should reject ints."""
+        """A float should reject ints."""
         self._rule_path_type_bad(
             float, str(sys.maxsize+1), 'has type int not type float')
 
     @unittest2.skipIf(sys.version_info.major > 2, 'specific to Python 2')
     def test_path_type_long_good_1_py2(self):
-        """long should recognize valid longs."""
-        # pylint: disable=undefined-variable # unicode/long for Python 2 support
-        # pylint: disable=no-member  # Python 2 support
+        """A long should recognize valid longs."""
+        # pylint: disable=undefined-variable, no-member
         self._rule_path_type_good(long, str(sys.maxint+1), sys.maxint+1)
 
     @unittest2.skipIf(sys.version_info.major > 2, 'specific to Python 2')
     def test_path_type_long_bad_1_py2(self):
-        """long should reject ints."""
-        # pylint: disable=undefined-variable # unicode/long for Python 2 support
+        """A long should reject ints."""
+        # pylint: disable=undefined-variable
         self._rule_path_type_bad(long, '0', 'has type int not type long')
 
     @unittest2.skipIf(sys.version_info.major > 2, 'specific to Python 2')
     def test_path_type_long_bad_2_py2(self):
-        """long should reject strings."""
-        # pylint: disable=undefined-variable # unicode/long for Python 2 support
+        """A long should reject strings."""
+        # pylint: disable=undefined-variable
         self._rule_path_type_bad(long, '7L', 'has type str not type long')
 
     @unittest2.skipIf(sys.version_info.major > 2, 'specific to Python 2')
     def test_path_type_long_bad_3_py2(self):
-        """long should reject floats."""
-        # pylint: disable=undefined-variable # unicode/long for Python 2 support
+        """A long should reject floats."""
+        # pylint: disable=undefined-variable
         self._rule_path_type_bad(
             long, '9.223372036854776e+18', 'has type float not type long')
 
     @unittest2.skipIf(sys.version_info.major > 2, 'specific to Python 2')
     def test_path_type_numeric_union_good_1_py2(self):
-        """int, long, float should accept variety of numeric types."""
-        # pylint: disable=undefined-variable # unicode/long for Python 2 support
+        """An int, long, float should accept variety of numeric types."""
+        # pylint: disable=undefined-variable
         self._rule_path_type_good((int, long, float), '42', 42)
 
     @unittest2.skipIf(sys.version_info.major > 2, 'specific to Python 2')
     def test_path_type_numeric_union_good_2_py2(self):
-        """int, long, float should accept variety of numeric types."""
-        # pylint: disable=undefined-variable # unicode/long for Python 2 support
+        """An int, long, float should accept variety of numeric types."""
+        # pylint: disable=undefined-variable
         self._rule_path_type_good((int, long, float), '0', 0)
 
     @unittest2.skipIf(sys.version_info.major > 2, 'specific to Python 2')
     def test_path_type_numeric_union_good_3_py2(self):
-        """int, long, float should accept variety of numeric types."""
-        # pylint: disable=undefined-variable # unicode/long for Python 2 support
+        """An int, long, float should accept variety of numeric types."""
+        # pylint: disable=undefined-variable
         self._rule_path_type_good((int, long, float), '-42', -42)
 
     @unittest2.skipIf(sys.version_info.major > 2, 'specific to Python 2')
     def test_path_type_numeric_union_good_4_py2(self):
-        """int, long, float should accept variety of numeric types."""
-        # pylint: disable=undefined-variable # unicode/long for Python 2 support
+        """An int, long, float should accept variety of numeric types."""
+        # pylint: disable=undefined-variable
         self._rule_path_type_good((int, long, float), '-0', 0)
 
     @unittest2.skipIf(sys.version_info.major > 2, 'specific to Python 2')
     def test_path_type_numeric_union_good_5_py2(self):
-        """int, long, float should accept variety of numeric types."""
-        # pylint: disable=undefined-variable # unicode/long for Python 2 support
+        """An int, long, float should accept variety of numeric types."""
+        # pylint: disable=undefined-variable
         self._rule_path_type_good((int, long, float), '+0', 0)
 
     @unittest2.skipIf(sys.version_info.major > 2, 'specific to Python 2')
     def test_path_type_numeric_union_good_6_py2(self):
-        """int, long, float should accept variety of numeric types."""
-        # pylint: disable=undefined-variable # unicode/long for Python 2 support
-        # pylint: disable=no-member  # Python 2 support
+        """An int, long, float should accept variety of numeric types."""
+        # pylint: disable=undefined-variable, no-member
         self._rule_path_type_good(
             (int, long, float), str(sys.maxint), sys.maxint)
 
     @unittest2.skipIf(sys.version_info.major > 2, 'specific to Python 2')
     def test_path_type_numeric_union_good_7_py2(self):
-        """int, long, float should accept variety of numeric types."""
-        # pylint: disable=undefined-variable # unicode/long for Python 2 support
+        """An int, long, float should accept variety of numeric types."""
+        # pylint: disable=undefined-variable
         self._rule_path_type_good((int, long, float), '42.2', 42.2)
 
     @unittest2.skipIf(sys.version_info.major > 2, 'specific to Python 2')
     def test_path_type_numeric_union_good_8_py2(self):
-        """int, long, float should accept variety of numeric types."""
-        # pylint: disable=undefined-variable # unicode/long for Python 2 support
+        """An int, long, float should accept variety of numeric types."""
+        # pylint: disable=undefined-variable
         self._rule_path_type_good((int, long, float), '1.e+5', 100000)
 
     @unittest2.skipIf(sys.version_info.major > 2, 'specific to Python 2')
     def test_path_type_numeric_union_good_9_py2(self):
-        """int, long, float should accept variety of numeric types."""
-        # pylint: disable=undefined-variable # unicode/long for Python 2 support
+        """An int, long, float should accept variety of numeric types."""
+        # pylint: disable=undefined-variable
         self._rule_path_type_good((int, long, float), '.inf', float('inf'))
 
     @unittest2.skipIf(sys.version_info.major > 2, 'specific to Python 2')
     def test_path_type_numeric_union_good_10_py2(self):
-        """int, long, float should accept variety of numeric types."""
-        # pylint: disable=undefined-variable # unicode/long for Python 2 support
+        """An int, long, float should accept variety of numeric types."""
+        # pylint: disable=undefined-variable
         self._rule_path_type_good((int, long, float), '-.inf', -float('inf'))
 
     @unittest2.skipIf(sys.version_info.major > 2, 'specific to Python 2')
     def test_path_type_numeric_union_good_11_py2(self):
-        """int, long, float should accept variety of numeric types."""
-        # pylint: disable=undefined-variable # unicode/long for Python 2 support
+        """An int, long, float should accept variety of numeric types."""
+        # pylint: disable=undefined-variable
         self._rule_path_type_good(
             (int, long, float), '.nan', 'nan', normalizer=str)
 
     @unittest2.skipIf(sys.version_info.major > 2, 'specific to Python 2')
     def test_path_type_numeric_union_good_12_py2(self):
-        """int, long, float should accept variety of numeric types."""
-        # pylint: disable=undefined-variable # unicode/long for Python 2 support
-        # pylint: disable=no-member  # Python 2 support
+        """An int, long, float should accept variety of numeric types."""
+        # pylint: disable=undefined-variable, no-member
         self._rule_path_type_good(
             (int, long, float), str(sys.maxint+1), sys.maxint+1)
 
     @unittest2.skipIf(sys.version_info.major > 2, 'specific to Python 2')
     def test_path_type_numeric_union_bad_py2(self):
         """Test that int, long, float rejects string."""
-        # pylint: disable=undefined-variable # unicode/long for Python 2 support
+        # pylint: disable=undefined-variable
         self._rule_path_type_bad(
             (int, long, float), 'forty-two',
             'has type str not type int or long or float')
 
     @unittest2.skipIf(sys.version_info.major == 2, 'specific to Python 3')
     def test_path_type_numeric_union_good_1_py3(self):
-        """int, float should accept variety of numeric types."""
+        """An int, float should accept variety of numeric types."""
         self._rule_path_type_good((int, float), '42', 42)
 
     @unittest2.skipIf(sys.version_info.major == 2, 'specific to Python 3')
     def test_path_type_numeric_union_good_2_py3(self):
-        """int, float should accept variety of numeric types."""
+        """An int, float should accept variety of numeric types."""
         self._rule_path_type_good((int, float), '0', 0)
 
     @unittest2.skipIf(sys.version_info.major == 2, 'specific to Python 3')
     def test_path_type_numeric_union_good_3_py3(self):
-        """int, float should accept variety of numeric types."""
+        """An int, float should accept variety of numeric types."""
         self._rule_path_type_good((int, float), '-42', -42)
 
     @unittest2.skipIf(sys.version_info.major == 2, 'specific to Python 3')
     def test_path_type_numeric_union_good_4_py3(self):
-        """int, float should accept variety of numeric types."""
+        """An int, float should accept variety of numeric types."""
         self._rule_path_type_good((int, float), '-0', 0)
 
     @unittest2.skipIf(sys.version_info.major == 2, 'specific to Python 3')
     def test_path_type_numeric_union_good_5_py3(self):
-        """int, float should accept variety of numeric types."""
+        """An int, float should accept variety of numeric types."""
         self._rule_path_type_good((int, float), '+0', 0)
 
     @unittest2.skipIf(sys.version_info.major == 2, 'specific to Python 3')
     def test_path_type_numeric_union_good_6_py3(self):
-        """int, float should accept variety of numeric types."""
+        """An int, float should accept variety of numeric types."""
         self._rule_path_type_good((int, float), str(sys.maxsize), sys.maxsize)
 
     @unittest2.skipIf(sys.version_info.major == 2, 'specific to Python 3')
     def test_path_type_numeric_union_good_7_py3(self):
-        """int, float should accept variety of numeric types."""
+        """An int, float should accept variety of numeric types."""
         self._rule_path_type_good((int, float), '42.2', 42.2)
 
     @unittest2.skipIf(sys.version_info.major == 2, 'specific to Python 3')
     def test_path_type_numeric_union_good_8_py3(self):
-        """int, float should accept variety of numeric types."""
+        """An int, float should accept variety of numeric types."""
         self._rule_path_type_good((int, float), '1.e+5', 100000)
 
     @unittest2.skipIf(sys.version_info.major == 2, 'specific to Python 3')
     def test_path_type_numeric_union_good_9_py3(self):
-        """int, float should accept variety of numeric types."""
+        """An int, float should accept variety of numeric types."""
         self._rule_path_type_good((int, float), '.inf', float('inf'))
 
     @unittest2.skipIf(sys.version_info.major == 2, 'specific to Python 3')
     def test_path_type_numeric_union_good_10_py3(self):
-        """int, float should accept variety of numeric types."""
+        """An int, float should accept variety of numeric types."""
         self._rule_path_type_good((int, float), '-.inf', -float('inf'))
 
     @unittest2.skipIf(sys.version_info.major == 2, 'specific to Python 3')
@@ -5006,7 +5003,7 @@ class PathTypeTestNumbers(TestCase):
     @unittest2.skipIf(sys.version_info.major == 2, 'specific to Python 3')
     def test_path_type_numeric_union_bad_py3(self):
         """Test that int, float rejects string."""
-        # pylint: disable=undefined-variable # unicode/long for Python 2 support
+        # pylint: disable=undefined-variable
         self._rule_path_type_bad(
             (int, float), 'forty-two', 'has type str not type int or float')
 
@@ -5015,118 +5012,118 @@ class PathTypeTestTimestamps(TestCase):
     """Test that path_type recognizes dates and datetimes."""
 
     def test_path_type_datetime_good(self):
-        """datetime should recognize valid datetimes."""
+        """A datetime should recognize valid datetimes."""
         self._rule_path_type_good(
             datetime, '2020-01-01 02:03:04', datetime(2020, 1, 1, 2, 3, 4))
 
     def test_path_type_datetime_union_good_1(self):
-        """date, datetime union should recognizes dates and datetimes."""
+        """A date, datetime union should recognizes dates and datetimes."""
         self._rule_path_type_good(
             (date, datetime), '2020-01-01',
             date(2020, 1, 1))
 
     def test_path_type_datetime_union_good_2(self):
-        """date, datetime union should recognizes dates and datetimes."""
+        """A date, datetime union should recognizes dates and datetimes."""
         self._rule_path_type_good(
             (date, datetime), '2020-01-01 02:03:04',
             datetime(2020, 1, 1, 2, 3, 4))
 
     def test_path_type_date_for_datetime_good(self):
-        """date should recognizes datetimes due to inheritance."""
+        """A date should recognizes datetimes due to inheritance."""
         datetimevalue = datetime(2020, 1, 1, 2, 3, 4)
         self.assertIsInstance(datetimevalue, date)
 
     def test_path_type_date_good_1(self):
-        """date should recognize valid dates and datetimes."""
+        """A date should recognize valid dates and datetimes."""
         self._rule_path_type_good(date, '2020-01-01', date(2020, 1, 1))
 
     def test_path_type_date_good_2(self):
-        """date should recognize valid dates and datetimes."""
+        """A date should recognize valid dates and datetimes."""
         self._rule_path_type_good(
             date, '2020-01-01 02:03:04', datetime(2020, 1, 1, 2, 3, 4))
 
     def test_path_type_date_good_3(self):
-        """date should recognize valid dates and datetimes."""
+        """A date should recognize valid dates and datetimes."""
         self._rule_path_type_good(
             date, '2020-01-01 02:03:04Z', datetime(2020, 1, 1, 2, 3, 4),
             normalizer=_as_naive_datetime_in_utc)
 
     def test_path_type_date_good_4(self):
-        """date should recognize valid dates and datetimes."""
+        """A date should recognize valid dates and datetimes."""
         self._rule_path_type_good(date, '1995-02-04', date(1995, 2, 4))
 
     def test_path_type_date_good_5(self):
-        """date should recognize valid dates and datetimes."""
+        """A date should recognize valid dates and datetimes."""
         self._rule_path_type_good(
             date, '2020-01-02 00:00:00', datetime(2020, 1, 2, 0, 0, 0))
 
     def test_path_type_date_good_6(self):
-        """date should recognize valid dates and datetimes."""
+        """A date should recognize valid dates and datetimes."""
         self._rule_path_type_good(
             date, '2020-01-01 02:03:04+11',
             datetime(2019, 12, 31, 15, 3, 4),
             normalizer=_as_naive_datetime_in_utc)
 
     def test_path_type_date_good_7(self):
-        """date should recognize valid dates and datetimes."""
+        """A date should recognize valid dates and datetimes."""
         self._rule_path_type_good(
             date, '2020-01-01 02:03:04-11',
             datetime(2020, 1, 1, 13, 3, 4),
             normalizer=_as_naive_datetime_in_utc)
 
     def test_path_type_date_good_8(self):
-        """date should recognize valid dates and datetimes."""
+        """A date should recognize valid dates and datetimes."""
         self._rule_path_type_good(
             date, '2020-01-01 02:03:04+11:00',
             datetime(2019, 12, 31, 15, 3, 4),
             normalizer=_as_naive_datetime_in_utc)
 
     def test_path_type_date_good_9(self):
-        """date should recognize valid dates and datetimes."""
+        """A date should recognize valid dates and datetimes."""
         self._rule_path_type_good(
             date, '2020-01-01 02:03:04.321+11',
             datetime(2019, 12, 31, 15, 3, 4, 321000),
             normalizer=_as_naive_datetime_in_utc)
 
     def test_path_type_date_good_10(self):
-        """date should recognize valid dates and datetimes."""
+        """A date should recognize valid dates and datetimes."""
         self._rule_path_type_good(
             date, '2020-01-01 02:03:04.321987+11',
             datetime(2019, 12, 31, 15, 3, 4, 321987),
             normalizer=_as_naive_datetime_in_utc)
 
     def test_path_type_date_good_11(self):
-        """date should recognize valid dates and datetimes."""
+        """A date should recognize valid dates and datetimes."""
         self._rule_path_type_good(
             date, '1996-12-19T16:39:57-08:00',
             datetime(1996, 12, 20, 0, 39, 57),
             normalizer=_as_naive_datetime_in_utc)
 
     def test_path_type_date_bad_1(self):
-        """datetime should reject dates (but not vice-versa)."""
+        """A datetime should reject dates (but not vice-versa)."""
         self._rule_path_type_bad(
             datetime, '2020-01-01', 'has type date not type datetime')
 
     def test_path_type_date_bad_2(self):
-        """date should reject dates with no hyphen separators."""
+        """A date should reject dates with no hyphen separators."""
         self._rule_path_type_bad(
             date, '20200101', 'has type int not type date')
 
     def test_path_type_date_bad_3(self):
-        """date should reject dates with only year and month."""
+        """A date should reject dates with only year and month."""
         self._rule_path_type_bad(date, '2020-01', 'has type str not type date')
 
     def test_path_type_date_bad_4(self):
-        """date should reject times without dates."""
+        """A date should reject times without dates."""
         self._rule_path_type_bad(date, '02:03:04', 'has type str not type date')
 
     def test_path_type_date_bad_5(self):
-        """date should reject datetimes with no seconds."""
+        """A date should reject datetimes with no seconds."""
         self._rule_path_type_bad(
             date, '2020-01-01 02:03', 'has type str not type date')
 
     def test_path_type_date_bad_6(self):
-        """datetime rejects datetimes expressing 24:00 end-of-day."""
+        """A datetime rejects datetimes expressing 24:00 end-of-day."""
         # This is less a test of proper behavior and more a canary check
         # of actual behavior.  While the YAML parser recognizes the
         # value as a timestamp, the datetime constructor that it invokes
@@ -5139,7 +5136,7 @@ class PathTypeTestMapsAndLists(TestCase):
     """Test that path_type recognizes map and list structures."""
 
     def test_path_type_dict_on_root_map_good(self):
-        """root map should be recognized as dict."""
+        """A root map should be recognized as dict."""
         self._write_file(self.conffile, """
         aaa: aaaaa
         bbb: bbbbb
@@ -5152,7 +5149,7 @@ class PathTypeTestMapsAndLists(TestCase):
         self.assertEqual(conf.bbb, 'bbbbb')
 
     def test_path_type_dict_on_root_list_bad(self):
-        """root list should be rejected as dict."""
+        """A root list should be rejected as dict."""
         self._write_file(self.conffile, """
         - aaaaa
         - bbbbb
@@ -5164,7 +5161,7 @@ class PathTypeTestMapsAndLists(TestCase):
             confp.parse_file(self.conffile)
 
     def test_path_type_list_on_root_list_good(self):
-        """root list should be recognized as list."""
+        """A root list should be recognized as list."""
         self._write_file(self.conffile, """
         - aaaaa
         - bbbbb
@@ -5177,7 +5174,7 @@ class PathTypeTestMapsAndLists(TestCase):
         self.assertEqual(conf[1], 'bbbbb')
 
     def test_path_type_list_on_root_map_bad(self):
-        """root map should be rejected as list."""
+        """A root map should be rejected as list."""
         self._write_file(self.conffile, """
         aaa: aaaaa
         bbb: bbbbb
@@ -5189,7 +5186,7 @@ class PathTypeTestMapsAndLists(TestCase):
             confp.parse_file(self.conffile)
 
     def test_path_type_dict_on_path_map_good(self):
-        """map on path should be recognized as dict."""
+        """A map on path should be recognized as dict."""
         self._write_file(self.conffile, """
         field:
           aaa: aaaaa
@@ -5204,7 +5201,7 @@ class PathTypeTestMapsAndLists(TestCase):
         self.assertEqual(conf.field.bbb, 'bbbbb')
 
     def test_path_type_dict_on_path_list_bad(self):
-        """list on path should be rejected as dict."""
+        """A list on path should be rejected as dict."""
         self._write_file(self.conffile, """
         field:
         - aaaaa
@@ -5218,7 +5215,7 @@ class PathTypeTestMapsAndLists(TestCase):
             confp.parse_file(self.conffile)
 
     def test_path_type_list_on_path_list_good(self):
-        """list on path should be recognized as list."""
+        """A list on path should be recognized as list."""
         self._write_file(self.conffile, """
         field:
         - aaaaa
@@ -5233,7 +5230,7 @@ class PathTypeTestMapsAndLists(TestCase):
         self.assertEqual(conf.field[1], 'bbbbb')
 
     def test_path_type_list_on_path_dict_bad(self):
-        """map on path should be rejected as list."""
+        """A map on path should be rejected as list."""
         self._write_file(self.conffile, """
         field:
           aaa: aaaaa
@@ -5252,14 +5249,14 @@ class RuleTestBasics(TestCase):
 
     def test_rule_test_basics_success(self):
         """Test that a test that returns None succeeds."""
-        # pylint: disable=unused-argument  # must match test func definition
+        # pylint: disable=unused-argument, missing-docstring
         def is_success(conf, path, value):
             return None
         self._rule_test_good(is_success, 'aaaaa')
 
     def test_rule_test_basics_failure(self):
         """Test that a test that returns a string fails."""
-        # pylint: disable=unused-argument  # must match test func definition
+        # pylint: disable=unused-argument, missing-docstring
         def is_failure(conf, path, value):
             return 'a detailed explanation of why'
         self._rule_test_bad(
@@ -5267,7 +5264,7 @@ class RuleTestBasics(TestCase):
 
     def test_rule_test_basics_error(self):
         """Test that test raising an error fails with explanation."""
-        # pylint: disable=unused-argument  # must match test func definition
+        # pylint: disable=unused-argument, missing-docstring
         def is_error(conf, path, value):
             raise RuntimeError('what went wrong')
         self._rule_test_bad(
@@ -5508,7 +5505,7 @@ class RuleTestIsDomainNameTests(TestCase):
 
     def test_rule_test_is_domain_name_good_4(self):
         """Test is_domain_name recognizes a valid domain name."""
-        domname = '1.'+'.'.join(['0' for idx in range(31)])+'.ip6.arpa'
+        domname = '1.'+'.'.join(['0'] * 31)+'.ip6.arpa'
         self._rule_test_good(test.is_domain_name, domname)
 
     def test_rule_test_is_domain_name_bad_1(self):
@@ -5531,7 +5528,7 @@ class RuleTestIsDomainNameTests(TestCase):
 
     def test_rule_test_is_domain_name_bad_4(self):
         """Test is_domain_name rejects excessive number of labels."""
-        domname = '.'.join(['a' for idx in range(126)])+'.example.com'
+        domname = '.'.join(['a'] * 126)+'.example.com'
         self._rule_test_bad(
             test.is_domain_name, domname, 'cannot have more than 127 labels')
 

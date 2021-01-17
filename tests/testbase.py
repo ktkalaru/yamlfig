@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# pylint: disable=import-error, useless-object-inheritance
+# pylint: disable=import-error
 
 """Module contains base classes and methods available for all testing."""
 
@@ -44,6 +44,8 @@ class CaptureIO(object):
     stderr_txt = capio.get_stderr()
     """
 
+    # pylint: disable=useless-object-inheritance
+
     def __init__(self, filepfx):
         """Construct stdout/err buffers to capture them."""
         self.orig_stdout = None
@@ -57,6 +59,7 @@ class CaptureIO(object):
 
     def __enter__(self):
         """Redirect stdout/err to the object buffers."""
+        # pylint: disable=consider-using-with
         assert self.orig_stdout is None
         assert self.orig_stderr is None
         self.orig_stdout = sys.stdout

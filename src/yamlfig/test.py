@@ -1,4 +1,4 @@
-"""Module contains functions that test for common config patterns.
+"""Functions that test for common config patterns.
 
 Standard test functions and higher-order functions for use with
 yamlfig's rule testing functionality.  Function names that begin with
@@ -33,7 +33,7 @@ def is_interval(lower, upper, exclude_lower=False, include_upper=False):
     lexicographical or otherwise, based on the object type.
 
     """
-    # pylint: disable=unused-argument # args defined by test definition
+    # pylint: disable=unused-argument
     lowersym = '(' if exclude_lower else '['
     uppersym = ']' if include_upper else ')'
     intervalstr = '{0}{1}, {2}{3}'.format(
@@ -43,6 +43,7 @@ def is_interval(lower, upper, exclude_lower=False, include_upper=False):
         raise ValueError('invalid interval "{0}"'.format(intervalstr))
 
     def is_interval_test(conf, path, value):
+        """Test that value is within the specified interval."""
         if value < lower or (value <= lower and exclude_lower):
             return u'{0} is below the interval {1}'.format(
                 repr(value), intervalstr)
@@ -64,10 +65,11 @@ def is_regex(regex, invert=False):
     fail.
 
     """
-    # pylint: disable=unused-argument # args defined by test definition
+    # pylint: disable=unused-argument
     rex = re.compile(regex)
 
     def is_regex_test(conf, path, value):
+        """Test that value matches the given regex."""
         match = rex.search(value)
         if invert and match:
             return u'"{0}" matches /{1}/'.format(value, regex)
@@ -102,7 +104,7 @@ def match_is_ipv4_address(value):
 
 def is_ipv4_address(conf, path, value):
     """Test that value is a valid dotted-quad IPv4 address."""
-    # pylint: disable=unused-argument # args defined by test definition
+    # pylint: disable=unused-argument
     return match_is_ipv4_address(value)
 
 
@@ -140,7 +142,7 @@ def match_is_domain_name(value):
 
 def is_domain_name(conf, path, value):
     """Test that the value matches the format of a DNS domain name."""
-    # pylint: disable=unused-argument # args defined by test definition
+    # pylint: disable=unused-argument
     return match_is_domain_name(value)
 
 
@@ -198,7 +200,7 @@ def match_is_email_address(value):
 
 def is_email_address(conf, path, value):
     """Test that value matches the format of an email address."""
-    # pylint: disable=unused-argument # args defined by test definition
+    # pylint: disable=unused-argument
     return match_is_email_address(value)
 
 
@@ -233,7 +235,7 @@ def match_is_url(value):
 
 def is_url(conf, path, value):
     """Test that value matches the format of a URL."""
-    # pylint: disable=unused-argument # args defined by test definition
+    # pylint: disable=unused-argument
     return match_is_url(value)
 
 
@@ -254,7 +256,7 @@ def is_file_path(*ostests):
     helpful "is not a directory" error.
 
     """
-    # pylint: disable=unused-argument # args defined by test definition
+    # pylint: disable=unused-argument
     for ostest in ostests:
         assert ostest in [
             'exists', '!exists',
@@ -264,6 +266,7 @@ def is_file_path(*ostests):
             'ismount', '!ismount']
 
     def is_file_path_test(conf, path, value):
+        """Test value against the given set of file-metadata properties."""
         res = []
         for ostest in ostests:
             if ostest == 'exists' and not os.path.exists(value):

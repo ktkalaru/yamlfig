@@ -34,7 +34,7 @@ python_bin = 'python3'
 
 build_envs = {
     'local': {
-        'actions': ['pylint', 'pycodestyle', 'pydocstyle', 'tox', 'dist'],
+        'actions': ['dist', 'pylint', 'pycodestyle', 'pydocstyle', 'tox'],
         'tox_envlist': 'py27,py36'
     }
 }
@@ -64,13 +64,13 @@ def main(argv=None):
         print(f'\n[{action}]')
         if action == 'pylint':
             for target in pylint_targets:
-                pxcmd(f'pylint {target}')
+                pxcmd(f'{python_bin} -m pylint {target}')
         elif action == 'pycodestyle':
             for target in pycodestyle_targets:
-                pxcmd(f'pycodestyle {target}')
+                pxcmd(f'{python_bin} -m pycodestyle {target}')
         elif action == 'pydocstyle':
             for target in pydocstyle_targets:
-                pxcmd(f'pydocstyle {pydocstyle_args} {target}')
+                pxcmd(f'{python_bin} -m pydocstyle {pydocstyle_args} {target}')
         elif action == 'tox':
             tox_envlist = build_env['tox_envlist']
             pxcmd(f'tox -e {tox_envlist}')

@@ -26,10 +26,10 @@ This package was inspired by the similar capability that argparse
 brought to command-line argument parsing.
 
 """
+# pylint: disable=wildcard-import
 
 from __future__ import absolute_import
 
-import exceptions
 import sys
 import warnings
 
@@ -42,4 +42,4 @@ from . import test
 if sys.version_info.major == 2:
     warnings.warn(
         'yamlfig 1.0.1 will be the last major version to support Python 2.',
-        exceptions.DeprecationWarning, stacklevel=2)
+        DeprecationWarning, stacklevel=2)

@@ -23,12 +23,12 @@ import sys
 
 from datetime import date, datetime
 
+# Shared testing basics - pytest enables the relative load
+from testbase import CaptureIO, TestCase
+
 # Target package for testing
 from yamlfig import YamlConfigParser, YamlConfig, YamlConfigList,\
     test, print_underscore_warning
-
-# Shared testing basics - pytest enables the relative load
-from testbase import CaptureIO, TestCase
 
 # Globals
 PYTHON_BIN = 'python'
@@ -1236,8 +1236,8 @@ class TestPathTypeChecking(TestCase):
         and long types.
 
         """
-        # pylint: disable=undefined-variable # unicode/long for Python 2 support
-        NoneType = type(None)
+        # pylint: disable=undefined-variable
+        none_type = type(None)
         confp = YamlConfigParser()
         confp.add_rule('bool_field', path_type=bool)
         confp.add_rule('str_field', path_type=str)
@@ -1255,7 +1255,7 @@ class TestPathTypeChecking(TestCase):
         confp.add_rule('datetime_field', path_type=datetime)
         confp.add_rule('dict_field', path_type=dict)
         confp.add_rule('list_field', path_type=list)
-        confp.add_rule('nonetype_field', path_type=NoneType)
+        confp.add_rule('nonetype_field', path_type=none_type)
         conf = self._test_conf_good(confp, u'''
         bool_field: true
         str_field: "Hello world!"
@@ -1285,7 +1285,7 @@ class TestPathTypeChecking(TestCase):
         self.assertIsInstance(conf.datetime_field, datetime)
         self.assertIsInstance(conf.dict_field, YamlConfig)
         self.assertIsInstance(conf.list_field, YamlConfigList)
-        self.assertIsInstance(conf.nonetype_field, NoneType)
+        self.assertIsInstance(conf.nonetype_field, none_type)
 
     def test_union_types_handle_complex_types_like_number_string_good_1(self):
         """Union types handle complex types like a number or a string."""
@@ -1491,7 +1491,7 @@ class TestRuleTestFunctions(TestCase):
 
     def test_writing_own_test_functions_good(self):
         """Writing our own test functions."""
-        # pylint: disable=unused-argument
+        # pylint: disable=unused-argument, missing-docstring
         def has_default_and_user_fields(conf, path, value):
             if 'default' not in value:
                 return '"default" field is missing'
@@ -1519,7 +1519,7 @@ class TestRuleTestFunctions(TestCase):
 
     def test_writing_own_test_functions_bad_1(self):
         """Writing our own test functions."""
-        # pylint: disable=unused-argument
+        # pylint: disable=unused-argument, missing-docstring
         def has_default_and_user_fields(conf, path, value):
             if 'default' not in value:
                 return '"default" field is missing'
@@ -1544,7 +1544,7 @@ class TestRuleTestFunctions(TestCase):
 
     def test_writing_own_test_functions_bad_2(self):
         """Writing our own test functions."""
-        # pylint: disable=unused-argument
+        # pylint: disable=unused-argument, missing-docstring
         def has_default_and_user_fields(conf, path, value):
             if 'default' not in value:
                 return '"default" field is missing'

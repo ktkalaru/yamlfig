@@ -28,7 +28,7 @@ Exceptions:
   * ParseError is raised when YAML parsing and validation fails.
 
 """
-# pylint: disable=protected-access, useless-object-inheritance, too-many-lines
+# pylint: disable=protected-access, too-many-lines
 
 from __future__ import print_function
 
@@ -47,7 +47,7 @@ DELIM = '.'
 
 def print_underscore_warning(field):
     """Print warning if we encounter a field with a leading underscore."""
-    # pylint: disable=undefined-variable # for unicode / Python 2 support
+    # pylint: disable=undefined-variable
     if not print_underscore_warning.off:
         warntext = textwrap.dedent("""
         Warning: fields that start with underscores ("{0}") are discouraged
@@ -66,7 +66,7 @@ print_underscore_warning.off = False
 
 def _path_join(*pargs):
     # Create a path string from the field arguments, stripping any nulls
-    # pylint: disable=undefined-variable # for unicode / Python 2 support
+    # pylint: disable=undefined-variable
     if sys.version_info.major == 2:
         pargs = [unicode(parg) for parg in pargs if parg is not None]
     else:
@@ -105,7 +105,7 @@ def _value_to_conf(parent, field, value):
     else is passed through as a value.
 
     """
-    # pylint: disable=undefined-variable # for unicode / Python 2 support
+    # pylint: disable=undefined-variable
     assert isinstance(parent, BaseYamlConfig), parent
 
     # Detect leading underscore and print warning (with Python 2 unicode case)
@@ -166,6 +166,7 @@ class ParseError(ValueError):
         message if given.
 
         """
+        # pylint: disable=super-with-arguments
         if pathstr:
             if pathstr != '*root*':
                 pathstr = u'"{0}"'.format(pathstr)
@@ -253,7 +254,7 @@ class YamlConfigRule(object):
 
     """
 
-    # pylint: disable=too-many-instance-attributes
+    # pylint: disable=too-many-instance-attributes, useless-object-inheritance
 
     def __init__(self, rule_path=None, path_type=None, default=None,
                  optional=False, nofollow=False, test=None,
@@ -310,7 +311,7 @@ class YamlConfigRule(object):
     @staticmethod
     def _validate_rule_path(rule_path):
         # Verify that the rule is well formed
-        # pylint: disable=undefined-variable # for unicode / Python 2 support
+        # pylint: disable=undefined-variable
         if rule_path is None:
             return
 
@@ -409,6 +410,7 @@ class YamlConfigRule(object):
         it returns None, continue.
 
         """
+        # pylint: disable=raise-missing-from
         pathstr = path if path is not None else '*root*'
         if self.test is None:
             return
@@ -433,6 +435,7 @@ class YamlConfigRule(object):
         return the value.
 
         """
+        # pylint: disable=raise-missing-from
         pathstr = path if path is not None else '*root*'
         if self.transform is None:
             return value
@@ -590,28 +593,40 @@ class YamlConfigRule(object):
         # it is better to instantiate the code once.
 
         def handle_matched_path(subrule, conf, field, pathstr):
-            # In the standard case, the rule is 'attached' to the
-            # parent, mapping the child field name to the rule.  Then
-            # we recursively attach any subrules to the child.
+            """Attach a rule once the path has been matched to it.
+
+            In the standard case, the rule is 'attached' to the
+            parent, mapping the child field name to the rule.  Then we
+            recursively attach any subrules to the child.
+
+            """
             conf._child_rules[field] = subrule
             subrule.attach_rules(conf[field], conf._filename, pathstr)
             handle_nofollow_check(subrule, conf, field)
 
         def handle_nofollow_check(subrule, conf, field):
-            # Once we have attached a subrule to conf for a field
-            # (either because the field was found or because we
-            # substituted a default for it), if the subrule is marked
-            # nofollow, convert the value back to a native python type
-            # (e.g., a dict or list).
+            """Handle the case where we've attached to a nofollow.
+
+            Once we have attached a subrule to conf for a field
+            (either because the field was found or because we
+            substituted a default for it), if the subrule is marked
+            nofollow, convert the value back to a native python type
+            (e.g., a dict or list).
+
+            """
             if subrule.nofollow:
                 conf[field] = _conf_to_record(conf[field])
 
         def handle_exercised_default(subrule, conf, field, pathstr):
-            # In the case of an exercised default, the conf is either
-            # missing field or has an explicit null.  So construct the
-            # subconf from the default, attach it to the conf, attach
-            # the rule to the parent, and recursively attach any
-            # subrules to the new child.
+            """Handle the case where a default is omitted.
+
+            In the case of an exercised default, the conf is either
+            missing field or has an explicit null.  So construct the
+            subconf from the default, attach it to the conf, attach
+            the rule to the parent, and recursively attach any
+            subrules to the new child.
+
+            """
             assert subrule.default is not None
             assert field not in conf or conf[field] is None
             subconf = _value_to_conf(conf, field, subrule.default)
@@ -621,22 +636,29 @@ class YamlConfigRule(object):
             handle_nofollow_check(subrule, conf, field)
 
         def handle_exercised_optional(subrule, conf, field):
-            # In the case of an exercised optional, the conf is either
-            # missing field or has an explicit null.  So, ensure that
-            # it exists and has a null.  Then treat it as missing
-            # (i.e., do not try to recursively attach subrules).
+            """Handle the case where an optional is omitted.
+
+            In the case of an exercised optional, the conf is either
+            missing field or has an explicit null.  So, ensure that it
+            exists and has a null.  Then treat it as missing (i.e., do
+            not try to recursively attach subrules).
+
+            """
             assert subrule.optional
             assert field not in conf or conf[field] is None
             conf[field] = None
             conf._child_rules[field] = subrule
 
         def attach_subrule_for_field(subrule, conf, field, pathstr):
-            # Whether because the rule path is a wildcard or matched
-            # the field, we are attaching the subrule for the field.
-            # However, the field could still be an explicit null
-            # value, in which case, if the rule is an optional or
-            # default, those handlers are invoked.
+            """Attach a subrule for a field.
 
+            Whether because the rule path is a wildcard or matched the
+            field, we are attaching the subrule for the field.
+            However, the field could still be an explicit null value,
+            in which case, if the rule is an optional or default,
+            those handlers are invoked.
+
+            """
             subconf = conf[field]
             if subconf is None and subrule.default is not None:
                 handle_exercised_default(subrule, conf, field, pathstr)
@@ -755,6 +777,7 @@ class YamlConfigRule(object):
         arguments to it.
 
         """
+        # pylint: disable=raise-missing-from
         with open(filename, 'r') as ifh:
             try:
                 record = yaml.load(ifh, Loader=self.Loader)
@@ -806,6 +829,8 @@ class BaseYamlConfig(object):
       FORMED: _do_transform has been called and nodes replaced with transforms
 
     """
+
+    # pylint: disable=useless-object-inheritance
 
     __metaclass__ = abc.ABCMeta
 
@@ -980,6 +1005,7 @@ class YamlConfig(BaseYamlConfig):
 
     def __init__(self, record, **kwargs):
         """Instantiate a new object from the given record."""
+        # pylint: disable=super-with-arguments
         assert isinstance(record, dict)
         super(YamlConfig, self).__init__(**kwargs)
         self._val = collections.OrderedDict()
@@ -1042,6 +1068,7 @@ class YamlConfigList(BaseYamlConfig):
 
     def __init__(self, record, root, **kwargs):
         """Instantiate a new object from the given list."""
+        # pylint: disable=super-with-arguments
         assert isinstance(record, (list, tuple, set))
         super(YamlConfigList, self).__init__(root=root, **kwargs)
         self._val = list()
