@@ -29,7 +29,17 @@ brought to command-line argument parsing.
 
 from __future__ import absolute_import
 
+import exceptions
+import sys
+import warnings
+
 from .__version__ import __version__
 
 from .base import *
 from . import test
+
+# Print last-version deprecation warning for Python 2
+if sys.version_info.major == 2:
+    warnings.warn(
+        'yamlfig 1.0.1 will be the last major version to support Python 2.',
+        exceptions.DeprecationWarning, stacklevel=2)
