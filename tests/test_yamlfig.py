@@ -115,55 +115,52 @@ class ParserChecks(TestCase):
                 r'"field.part\*.field" cannot use a partial wildcard'):
             confp.add_rule('field.part*.field')
 
-    def test_parser_wildcard_fixed_path_coexistence_bad_1(self):
-        """Wildcard rules and fixed-path siblings should raise error."""
+    def test_parser_wildcard_preceding_fixed_path_bad_1(self):
+        """Wildcard rules preceding fixed-path siblings should raise error."""
         confp = YamlConfigParser()
         confp.add_rule('*')
         with self.assertRaisesRegex(
-                ValueError, '"field" cannot be the sibling of a wildcard'):
+                ValueError, '"field" cannot follow a wildcard rule'):
             confp.add_rule('field')
 
-    def test_parser_wildcard_fixed_path_coexistence_bad_2(self):
-        """Wildcard rules and fixed-path siblings should raise error."""
+    def test_parser_wildcard_preceding_fixed_path_bad_2(self):
+        """Wildcard rules preceding fixed-path siblings should raise error."""
         confp = YamlConfigParser()
         confp.add_rule('aaa.aaa.*')
         with self.assertRaisesRegex(
                 ValueError,
-                '"aaa.aaa.field" cannot be the sibling of a wildcard'):
+                '"aaa.aaa.field" cannot follow a wildcard rule'):
             confp.add_rule('aaa.aaa.field')
 
-    def test_parser_wildcard_fixed_path_coexistence_bad_3(self):
-        """Wildcard rules and fixed-path siblings should raise error."""
+    def test_parser_wildcard_preceding_fixed_path_bad_3(self):
+        """Wildcard rules preceding fixed-path siblings should raise error."""
         confp = YamlConfigParser()
         confp.add_rule('aaa.*.aaa')
         with self.assertRaisesRegex(
                 ValueError,
-                '"aaa.field" cannot be the sibling of a wildcard'):
+                '"aaa.field" cannot follow a wildcard rule'):
             confp.add_rule('aaa.field.aaa')
 
-    def test_parser_wildcard_fixed_path_coexistence_bad_4(self):
-        """Wildcard rules and fixed-path siblings should raise error."""
+    def test_parser_fixed_path_preceding_wildcard_good_1(self):
+        """Wildcard rules following fixed-path siblings should be supported."""
+        # pylint: disable=no-self-use
         confp = YamlConfigParser()
         confp.add_rule('field')
-        with self.assertRaisesRegex(
-                ValueError, '"*" wildcard cannot have sibling rules'):
-            confp.add_rule('*')
+        confp.add_rule('*')
 
-    def test_parser_wildcard_fixed_path_coexistence_bad_5(self):
-        """Wildcard rules and fixed-path siblings should raise error."""
+    def test_parser_fixed_path_preceding_wildcard_good_2(self):
+        """Wildcard rules following fixed-path siblings should be supported."""
+        # pylint: disable=no-self-use
         confp = YamlConfigParser()
         confp.add_rule('aaa.aaa.field')
-        with self.assertRaisesRegex(
-                ValueError, '"aaa.aaa.*" wildcard cannot have sibling rules'):
-            confp.add_rule('aaa.aaa.*')
+        confp.add_rule('aaa.aaa.*')
 
-    def test_parser_wildcard_fixed_path_coexistence_bad_6(self):
-        """Wildcard rules and fixed-path siblings should raise error."""
+    def test_parser_fixed_path_preceding_wildcard_good_3(self):
+        """Wildcard rules following fixed-path siblings should be supported."""
+        # pylint: disable=no-self-use
         confp = YamlConfigParser()
         confp.add_rule('aaa.field.aaa')
-        with self.assertRaisesRegex(
-                ValueError, '"aaa.*" wildcard cannot have sibling rules'):
-            confp.add_rule('aaa.*.aaa')
+        confp.add_rule('aaa.*.aaa')
 
     def test_parser_nonstr_rule_paths_good_1(self):
         """String and unicode rule paths should be supported."""
@@ -565,8 +562,8 @@ class ParsedYamlTypes(TestCase):
 
     def test_yaml_parsed_mapping(self):
         """Test that mapping values are recognized as dicts."""
-        # Sanity check that implicit and explicit mappings are converted
-        # to YamlConfig objects and can be accessed as usual.
+        # Check that implicit and explicit mappings are converted to
+        # YamlConfig objects and can be accessed as usual.
         confp = YamlConfigParser()
 
         confp.add_rule('yaml_record', path_type=dict)
@@ -635,8 +632,8 @@ class ParsedYamlTypes(TestCase):
         """
         # pylint: disable=undefined-variable
 
-        # Sanity check that non-string keys are handled, and that
-        # usual hashing is used via collisions
+        # Check that non-string keys are handled, and that usual
+        # hashing is used via collisions
 
         confp = YamlConfigParser()
 
@@ -777,9 +774,8 @@ class ParsedYamlTypes(TestCase):
 
     def test_yaml_parsed_types_seq(self):
         """Test sequences are recognized as lists."""
-        # Sanity check that implicit and explicit mappings are
-        # converted to YamlConfigList objects and can be accessed as
-        # usual.
+        # Check that implicit and explicit mappings are converted to
+        # YamlConfigList objects and can be accessed as usual.
         confp = YamlConfigParser()
 
         confp.add_rule('yaml_lists', path_type=list)
@@ -2739,6 +2735,279 @@ class RulePathWildcardChecks(TestCase):
             """,
             excrex='"TypeA.xxxxx.TypeA.yyyyy.TypeB" is missing')
 
+    def test_wildcard_root_map_with_fixed_path_good_1(self):
+        """Test fixed with wildcard on root map accepts single field."""
+        confp = YamlConfigParser()
+        confp.add_rule('reqfield')
+        confp.add_rule('*')
+        conf = self._test_conf_good(confp, """
+        aaa: aaaaa
+        reqfield: bbbbb
+        """)
+        self.assertListEqual(list(conf), ['reqfield', 'aaa'])
+        self.assertEqual(conf.reqfield, 'bbbbb')
+        self.assertEqual(conf.aaa, 'aaaaa')
+
+    def test_wildcard_root_map_with_fixed_path_good_2(self):
+        """Test fixed with wildcard on root map accepts multiple fields."""
+        confp = YamlConfigParser()
+        confp.add_rule('reqfield')
+        confp.add_rule('*')
+        conf = self._test_conf_good(confp, """
+        aaa: aaaaa
+        bbb: bbbbb
+        ccc: ccccc
+        reqfield: ddddd
+        """)
+        self.assertSetEqual(set(conf), {'reqfield', 'aaa', 'bbb', 'ccc'})
+        self.assertEqual(conf.reqfield, 'ddddd')
+        self.assertEqual(conf.aaa, 'aaaaa')
+        self.assertEqual(conf.bbb, 'bbbbb')
+        self.assertEqual(conf.ccc, 'ccccc')
+
+    def test_wildcard_root_map_with_fixed_path_bad(self):
+        """Test fixed with wildcard on nested map rejects no field."""
+        confp = YamlConfigParser()
+        confp.add_rule('reqfield')
+        confp.add_rule('*')
+        self._test_conf_bad(
+            confp=confp,
+            conftext="""
+            reqfield: aaaaa
+            """,
+            excrex='must contain at least one additional field')
+
+    def test_wildcard_leaf_map_with_fixed_path_good_1(self):
+        """Test fixed with wildcard on nested map accepts single field."""
+        confp = YamlConfigParser()
+        confp.add_rule('aaa.aaa.reqfield')
+        confp.add_rule('aaa.aaa.*')
+        conf = self._test_conf_good(confp, """
+        aaa:
+          aaa:
+            aaa: aaaaa
+            reqfield: bbbbb
+        """)
+        self.assertIsInstance(conf.aaa.aaa, YamlConfig)
+        self.assertListEqual(list(conf.aaa.aaa), ['reqfield', 'aaa'])
+        self.assertEqual(conf.aaa.aaa.reqfield, 'bbbbb')
+        self.assertEqual(conf.aaa.aaa.aaa, 'aaaaa')
+
+    def test_wildcard_leaf_map_with_fixed_path_good_2(self):
+        """Test fixed with wildcard on nested map accepts multiple fields."""
+        confp = YamlConfigParser()
+        confp.add_rule('aaa.aaa.reqfield')
+        confp.add_rule('aaa.aaa.*')
+        conf = self._test_conf_good(confp, """
+        aaa:
+          aaa:
+            aaa: aaaaa
+            bbb: bbbbb
+            ccc: ccccc
+            reqfield: ddddd
+        """)
+        self.assertIsInstance(conf.aaa.aaa, YamlConfig)
+        self.assertSetEqual(set(conf.aaa.aaa), {
+            'reqfield', 'aaa', 'bbb', 'ccc'})
+        self.assertEqual(conf.aaa.aaa.reqfield, 'ddddd')
+        self.assertEqual(conf.aaa.aaa.aaa, 'aaaaa')
+        self.assertEqual(conf.aaa.aaa.bbb, 'bbbbb')
+        self.assertEqual(conf.aaa.aaa.ccc, 'ccccc')
+
+    def test_wildcard_leaf_map_with_fixed_path_bad(self):
+        """Test fixed with wildcard on nested map rejects no field."""
+        confp = YamlConfigParser()
+        confp.add_rule('aaa.aaa.reqfield')
+        confp.add_rule('aaa.aaa.*')
+        self._test_conf_bad(
+            confp=confp,
+            conftext="""
+            aaa:
+              aaa:
+                reqfield: aaaaa
+            """,
+            excrex='must contain at least one additional field')
+
+    def test_wildcard_nested_map_with_fixed_path_good_1(self):
+        """Test fixed with wildcard on path of map accepts single field."""
+        confp = YamlConfigParser()
+        confp.add_rule('aaa.reqfield.aaa')
+        confp.add_rule('aaa.*.aaa')
+        conf = self._test_conf_good(confp, """
+        aaa:
+          aaa:
+            aaa: aaaaa
+          reqfield:
+            aaa: bbbbb
+        """)
+        self.assertIsInstance(conf.aaa, YamlConfig)
+        self.assertListEqual(list(conf.aaa), ['reqfield', 'aaa'])
+        self.assertEqual(conf.aaa.reqfield.aaa, 'bbbbb')
+        self.assertEqual(conf.aaa.aaa.aaa, 'aaaaa')
+
+    def test_wildcard_nested_map_with_fixed_path_good_2(self):
+        """Test fixed with wildcard on path of map accepts multiple fields."""
+        confp = YamlConfigParser()
+        confp.add_rule('aaa.reqfield.aaa')
+        confp.add_rule('aaa.*.aaa')
+        conf = self._test_conf_good(confp, """
+        aaa:
+          aaa:
+            aaa: aaaaa
+          bbb:
+            aaa: bbbbb
+          ccc:
+            aaa: ccccc
+          reqfield:
+            aaa: ddddd
+        """)
+        self.assertIsInstance(conf.aaa, YamlConfig)
+        self.assertSetEqual(set(conf.aaa), {'reqfield', 'aaa', 'bbb', 'ccc'})
+        self.assertEqual(conf.aaa.reqfield.aaa, 'ddddd')
+        self.assertEqual(conf.aaa.aaa.aaa, 'aaaaa')
+        self.assertEqual(conf.aaa.bbb.aaa, 'bbbbb')
+        self.assertEqual(conf.aaa.ccc.aaa, 'ccccc')
+
+    def test_wildcard_nested_map_with_fixed_path_bad(self):
+        """Test fixed with wildcard on path of map rejects no field."""
+        confp = YamlConfigParser()
+        confp.add_rule('aaa.reqfield.aaa')
+        confp.add_rule('aaa.*.aaa')
+        self._test_conf_bad(
+            confp=confp,
+            conftext="""
+            aaa:
+              reqfield:
+                aaa: aaaaa
+            """,
+            excrex='must contain at least one additional field')
+
+    def test_wildcard_root_list_with_fixed_path_good_1(self):
+        """Test fixed with wildcard on root list accepts single field."""
+        confp = YamlConfigParser()
+        confp.add_rule('0')
+        confp.add_rule('*')
+        conf = self._test_conf_good(confp, """
+        - aaaaa
+        - bbbbb
+        """)
+        self.assertListEqual(list(conf), ['0', '1'])
+        self.assertEqual(conf[0], 'aaaaa')
+        self.assertEqual(conf[1], 'bbbbb')
+
+    def test_wildcard_root_list_with_fixed_path_good_2(self):
+        """Test fixed with wildcard on root list accepts multiple fields."""
+        confp = YamlConfigParser()
+        confp.add_rule('0')
+        confp.add_rule('*')
+        conf = self._test_conf_good(confp, """
+        - aaaaa
+        - bbbbb
+        - ccccc
+        - ddddd
+        """)
+        self.assertListEqual(list(conf), ['0', '1', '2', '3'])
+        self.assertEqual(conf[0], 'aaaaa')
+        self.assertEqual(conf[1], 'bbbbb')
+        self.assertEqual(conf[2], 'ccccc')
+        self.assertEqual(conf[3], 'ddddd')
+
+    def test_wildcard_root_list_with_fixed_path_bad(self):
+        """Test fixed with wildcard on nested list rejects no field."""
+        confp = YamlConfigParser()
+        confp.add_rule('0')
+        confp.add_rule('*')
+        self._test_conf_bad(
+            confp=confp,
+            conftext="""
+            - aaaaa
+            """,
+            excrex='must contain at least one additional field')
+
+    def test_wildcard_leaf_list_with_fixed_path_good_1(self):
+        """Test fixed with wildcard on nested list accepts single field."""
+        confp = YamlConfigParser()
+        confp.add_rule('0.0.0')
+        confp.add_rule('0.0.*')
+        conf = self._test_conf_good(confp, """
+        - - - aaaaa
+            - bbbbb
+        """)
+        self.assertIsInstance(conf[0][0], YamlConfigList)
+        self.assertListEqual(list(conf[0][0]), ['0', '1'])
+        self.assertEqual(conf[0][0][0], 'aaaaa')
+        self.assertEqual(conf[0][0][1], 'bbbbb')
+
+    def test_wildcard_leaf_list_with_fixed_path_good_2(self):
+        """Test fixed with wildcard on nested list accepts multiple fields."""
+        confp = YamlConfigParser()
+        confp.add_rule('0.0.0')
+        confp.add_rule('0.0.*')
+        conf = self._test_conf_good(confp, """
+        - - - aaaaa
+            - bbbbb
+            - ccccc
+            - ddddd
+        """)
+        self.assertIsInstance(conf[0][0], YamlConfigList)
+        self.assertListEqual(list(conf[0][0]), ['0', '1', '2', '3'])
+        self.assertEqual(conf[0][0][0], 'aaaaa')
+        self.assertEqual(conf[0][0][1], 'bbbbb')
+        self.assertEqual(conf[0][0][2], 'ccccc')
+        self.assertEqual(conf[0][0][3], 'ddddd')
+
+    def test_wildcard_leaf_list_with_fixed_path_bad_1(self):
+        """Test fixed with wildcard on nested list rejects no field."""
+        confp = YamlConfigParser()
+        confp.add_rule('0.0.0')
+        confp.add_rule('0.0.*')
+        self._test_conf_bad(
+            confp=confp,
+            conftext='- - - aaaaa',
+            excrex='must contain at least one additional field')
+
+    def test_wildcard_nested_list_with_fixed_path_good_1(self):
+        """Test fixed with wildcard on path of list accepts single field."""
+        confp = YamlConfigParser()
+        confp.add_rule('0.0.0')
+        confp.add_rule('0.*.0')
+        conf = self._test_conf_good(confp, """
+        - - - aaaaa
+          - - bbbbb
+        """)
+        self.assertIsInstance(conf[0], YamlConfigList)
+        self.assertListEqual(list(conf[0]), ['0', '1'])
+        self.assertEqual(conf[0][0][0], 'aaaaa')
+        self.assertEqual(conf[0][1][0], 'bbbbb')
+
+    def test_wildcard_nested_list_with_fixed_path_good_2(self):
+        """Test fixed with wildcard on path of list accepts multiple fields."""
+        confp = YamlConfigParser()
+        confp.add_rule('0.0.0')
+        confp.add_rule('0.*.0')
+        conf = self._test_conf_good(confp, """
+        - - - aaaaa
+          - - bbbbb
+          - - ccccc
+          - - ddddd
+        """)
+        self.assertIsInstance(conf[0], YamlConfigList)
+        self.assertListEqual(list(conf[0]), ['0', '1', '2', '3'])
+        self.assertEqual(conf[0][0][0], 'aaaaa')
+        self.assertEqual(conf[0][1][0], 'bbbbb')
+        self.assertEqual(conf[0][2][0], 'ccccc')
+        self.assertEqual(conf[0][3][0], 'ddddd')
+
+    def test_wildcard_nested_list_with_fixed_path_bad(self):
+        """Test fixed with wildcard on path of list rejects no field."""
+        confp = YamlConfigParser()
+        confp.add_rule('0.0.0')
+        confp.add_rule('0.*.0')
+        self._test_conf_bad(
+            confp=confp,
+            conftext='- - - aaaaa',
+            excrex='must contain at least one additional field')
+
 
 class PathNestingLimits(TestCase):
     """Test that deeply and/or broadly nested maps and lists are supported."""
@@ -4174,6 +4443,51 @@ class RulePathOptionalAndDefaultImplementZeroOrMoreWildcards(TestCase):
         self.assertEqual(conf.reqfield, 'aaaaa')
         self.assertFalse(conf.optfield)
         self.assertEqual(len(conf.optfield), 0)
+
+    def test_fixed_and_optional_wildcard_empty_at_root_map_good(self):
+        """Test parser with required and optional wildcard accepts required."""
+        confp = YamlConfigParser()
+        confp.add_rule('reqfield')
+        confp.add_rule('*', optional=True)
+        conf = self._test_conf_good(
+            confp=confp,
+            conftext="reqfield: aaaaa")
+        self.assertListEqual(list(conf), ['reqfield'])
+        self.assertEqual(conf.reqfield, 'aaaaa')
+
+    def test_fixed_and_optional_wildcard_filled_at_root_map_good_1(self):
+        """Test parser with required and optional wildcard accepts both."""
+        confp = YamlConfigParser()
+        confp.add_rule('reqfield')
+        confp.add_rule('*', optional=True)
+        conf = self._test_conf_good(
+            confp=confp,
+            conftext="""
+            aaa: aaaaa
+            reqfield: bbbbb
+            """)
+        self.assertListEqual(list(conf), ['reqfield', 'aaa'])
+        self.assertEqual(conf.reqfield, 'bbbbb')
+        self.assertEqual(conf.aaa, 'aaaaa')
+
+    def test_fixed_and_optional_wildcard_filled_at_root_map_good_2(self):
+        """Test parser with required and optional wildcard accepts both."""
+        confp = YamlConfigParser()
+        confp.add_rule('reqfield')
+        confp.add_rule('*', optional=True)
+        conf = self._test_conf_good(
+            confp=confp,
+            conftext="""
+            aaa: aaaaa
+            bbb: bbbbb
+            ccc: ccccc
+            reqfield: ddddd
+            """)
+        self.assertSetEqual(set(conf), {'reqfield', 'aaa', 'bbb', 'ccc'})
+        self.assertEqual(conf.reqfield, 'ddddd')
+        self.assertEqual(conf.aaa, 'aaaaa')
+        self.assertEqual(conf.bbb, 'bbbbb')
+        self.assertEqual(conf.ccc, 'ccccc')
 
     def test_zero_or_more_allreq_parser_all_present_list_good(self):
         """Test parser with all fields required accepts full config."""

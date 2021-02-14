@@ -493,18 +493,14 @@ class YamlConfigRule(object):
                     parent.rules[rule_field] = next_rule
                 parent = parent.rules[rule_field]
 
-        # Sanity check the consistency of the sibling rules
+        # Check the consistency of the sibling rules
         if rule_field in parent.rules:
             raise ValueError(
                 'Rule path "{0}" cannot be defined multiple times'.format(
                     rule_path))
-        if rule_field == WILDCARD and len(parent.rules) > 0:
-            raise ValueError(
-                'Rule path "{0}" wildcard cannot have sibling rules'
-                .format(rule_path))
         if rule_field != WILDCARD and WILDCARD in parent.rules.keys():
             raise ValueError(
-                'Rule path "{0}" cannot be the sibling of a wildcard rule'
+                'Rule path "{0}" cannot follow a wildcard rule as a sibling'
                 .format(rule_path))
 
         # Add and return the rule
@@ -514,8 +510,8 @@ class YamlConfigRule(object):
     def attach_rules(self, conf, conffile=None, path=None):
         """Associate each rule to element(s) of the config recursively.
 
-        Sanity check that the current rule applies to the conf object
-        which is typically a container object (i.e., a YamlConfig or
+        Check that the current rule applies to the conf object which
+        is typically a container object (i.e., a YamlConfig or
         YamlConfigList), so sweep through all of the child rules of
         the current rule and attach them to the container element, by
         populating the _child_rules dictionary of the conf object.  It
@@ -564,7 +560,7 @@ class YamlConfigRule(object):
         assert conf._state == 'NEW'
         assert conffile is None or conf._filename == conffile
 
-        # Sanity check that we are on the right path and have consistency
+        # Check that we are on the right path and have consistency
         if conf._is_root():
             if not self._is_root():
                 raise RuntimeError('non-root rule given root conf')
@@ -600,6 +596,7 @@ class YamlConfigRule(object):
             recursively attach any subrules to the child.
 
             """
+            assert field not in conf._child_rules
             conf._child_rules[field] = subrule
             subrule.attach_rules(conf[field], conf._filename, pathstr)
             handle_nofollow_check(subrule, conf, field)
@@ -629,6 +626,7 @@ class YamlConfigRule(object):
             """
             assert subrule.default is not None
             assert field not in conf or conf[field] is None
+            assert field not in conf._child_rules
             subconf = _value_to_conf(conf, field, subrule.default)
             conf[field] = subconf
             conf._child_rules[field] = subrule
@@ -646,6 +644,7 @@ class YamlConfigRule(object):
             """
             assert subrule.optional
             assert field not in conf or conf[field] is None
+            assert field not in conf._child_rules
             conf[field] = None
             conf._child_rules[field] = subrule
 
@@ -670,16 +669,25 @@ class YamlConfigRule(object):
         # Sweep through subrules, fill in defaults, and attach to config node
         for rule_field, subrule in self.rules.items():
             if rule_field == WILDCARD:
-                # If not optional a wildcard rule must match at least one field
-                if len(conf) == 0 and not subrule.optional:
-                    raise ParseError(
-                        'must contain at least one field',
-                        conf._filename,
-                        conf._path if conf._path else '*root*')
-                # The wildcard path matches all fields
+                # The wildcard path matches all fields not otherwise matched
+                wcfields = []
                 for field in conf:
+                    if field in conf._child_rules:
+                        continue
                     pathstr = _path_join(conf._path, field)
                     attach_subrule_for_field(subrule, conf, field, pathstr)
+                    wcfields.append(field)
+                # A non-optional wildcard rule must match at least one field
+                if len(wcfields) == 0 and not subrule.optional:
+                    if len(conf) == 0:
+                        raise ParseError(
+                            'must contain at least one field',
+                            conf._filename,
+                            conf._path if conf._path else '*root*')
+                    raise ParseError(
+                        'must contain at least one additional field',
+                        conf._filename,
+                        conf._path if conf._path else '*root*')
             else:
                 pathstr = _path_join(conf._path, rule_field)
                 if rule_field in conf:
@@ -709,7 +717,7 @@ class YamlConfigRule(object):
                     raise ParseError(
                         'unexpected by parser', conf._filename, subpath)
 
-                # Sanity check that we haven't somehow already descended into
+                # Check that we haven't somehow already descended into
                 # the value at this field and attached rules to it
                 if(isinstance(value, BaseYamlConfig) and
                    value._state != 'RULED'):
